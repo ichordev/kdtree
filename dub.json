@@ -1,0 +1,13 @@
+{
+	"name": "kdtree",
+	"description": "A k-dimensional tree implementation for D.",
+	"copyright": "Copyright © 2016, Mihail K, Robin Kupper",
+	"authors": [
+		"Mihail-K",
+		"Robin Kupper"
+	],
+	"license": "MIT",
+	"dependencies": {
+		"fluent-asserts": "~>0.7"
+	}
+}
