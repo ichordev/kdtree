@@ -35,7 +35,7 @@ void benchmarkNearest() {
 
 		auto sum = 0.0;
 		foreach (point; testPoints) {
-			auto nearest = points.minElement!(a => a[0 .. $].euclideanDistance(point[0 .. $]));
+			auto nearest = points.minElement!(a => a[].euclideanDistance(point[]));
 			sum += nearest[0];
 		}
 		return sum;
@@ -103,7 +103,7 @@ void benchmarkGrowing() {
 
 		auto sum = 0.0;
 		foreach (i; 0 .. points.length) {
-			auto nearest = points[0 .. i + 1].minElement!(a => a[0 .. $].euclideanDistance(testPoints[i][0 .. $]));
+			auto nearest = points[0 .. i + 1].minElement!(a => a[].euclideanDistance(testPoints[i][]));
 			sum += nearest[0];
 		}
 		return sum;

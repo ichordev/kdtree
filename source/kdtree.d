@@ -91,8 +91,13 @@ void rebalance(size_t k, T)(ref KDNode!(k, T)* root) {
 
 /**
 	Finds the neares neighbor in the kd tree using euclidean distance metric.
+	root must not be empty.
 */
-const(T[k]) nearest(size_t k, T)(in KDNode!(k, T)* root, in auto ref T[k] point) if (k > 0) {
+const(T[k]) nearest(size_t k, T)(in KDNode!(k, T)* root, in auto ref T[k] point)
+in {
+	assert (root !is null, "tree is empty");
+}
+body {
 	const(T[k])* nearest = null;
 	double nearestDistance;
 
@@ -104,7 +109,7 @@ const(T[k]) nearest(size_t k, T)(in KDNode!(k, T)* root, in auto ref T[k] point)
 		return sum;
 	}
 
-	void nearestImpl()(in KDNode!(k, T)* current, in ref T[k] point, size_t depth = 0) {
+	void nearestImpl(in KDNode!(k, T)* current, in ref T[k] point, size_t depth = 0) {
 		if (current !is null) {
 			immutable axis = depth % k;
 			immutable distance = distanceSq(current.state, point);
@@ -223,4 +228,13 @@ unittest {
 
 		root.nearest(point).should.equal(points.minElement!(a => a[0 .. $].euclideanDistance(point[0 .. $])));
 	}
+}
+
+/// Test nearest on empty tree
+unittest {
+	import fluent.asserts : should;
+	import core.exception : AssertError;
+
+	auto root = kdTree!(3, double);
+	root.nearest([0.0, 0.0, 0.0]).should.throwException!AssertError.withMessage.equal("tree is empty");
 }
