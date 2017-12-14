@@ -10,7 +10,7 @@ struct KDNode(size_t k, T) if (k > 0) {
 	private const(T[k]) state;
 	private KDNode!(k, T)* left = null, right = null;
 
-	this(T[k] state...) {
+	this(T[k] state...) pure nothrow {
 		this.state = state;
 	}
 }
@@ -18,7 +18,7 @@ struct KDNode(size_t k, T) if (k > 0) {
 /**
 	Counts the number of elements in the kd tree.
 */
-size_t size(size_t k, T)(KDNode!(k, T)* node) {
+size_t size(size_t k, T)(in KDNode!(k, T)* node) pure nothrow @nogc {
 	if (node is null) {
 		return 0;
 	}
@@ -29,7 +29,7 @@ size_t size(size_t k, T)(KDNode!(k, T)* node) {
 /**
 	Creates a slice of all elements in the kd tree.
 */
-T[k][] elements(size_t k, T)(KDNode!(k, T)* node) {
+T[k][] elements(size_t k, T)(in KDNode!(k, T)* node) pure nothrow {
 	if (node is null) {
 		return [];
 	}
@@ -41,11 +41,11 @@ T[k][] elements(size_t k, T)(KDNode!(k, T)* node) {
 	Creates a new kd tree.
 */
 template kdTree(size_t k, T) {
-	KDNode!(k, T)* kdTree() {
+	KDNode!(k, T)* kdTree() pure nothrow @nogc {
 		return null;
 	}
 
-	KDNode!(k, T)* kdTree(T[k][] points, size_t depth = 0) {
+	KDNode!(k, T)* kdTree(T[k][] points, size_t depth = 0) pure nothrow {
 		if (points.length == 0) {
 			return null;
 		}
@@ -53,22 +53,55 @@ template kdTree(size_t k, T) {
 			return new KDNode!(k, T)(points[0]);
 		}
 
-		immutable axis = depth % k;
+		immutable axis = depth % k, md = points.length / 2;
 
-		points.sort!((a, b) => a[axis] < b[axis]);
+		quickSelect(points, axis, md);
 
-		auto node = new KDNode!(k, T)(points[$ / 2]);
-		node.left = kdTree(points[0 .. $ / 2], depth + 1);
-		node.right = kdTree(points[$ / 2 + 1 .. $], depth + 1);
+		auto node = new KDNode!(k, T)(points[md]);
+		node.left = kdTree(points[0 .. md], depth + 1);
+		node.right = kdTree(points[md + 1 .. $], depth + 1);
 
 		return node;
+	}
+
+	// Adapted from https://rosettacode.org/wiki/K-d_tree#Faster_Alternative_Version
+	void quickSelect(T[k][] points, in size_t axis, in size_t k) pure nothrow @nogc {
+		import std.algorithm : swap;
+
+		size_t start = 0, end = points.length;
+		if (end < 2)
+			return;
+
+		while (true) {
+			immutable pivot = points[k][axis];
+
+			swap(points[k], points[end - 1]); // Swaps the whole arrays x.
+			auto store = start;
+			foreach (p; start .. end) {
+				if (points[p][axis] < pivot) {
+					if (p != store)
+						swap(points[p], points[store]);
+					store++;
+				}
+			}
+			swap(points[store], points[end - 1]);
+
+			// Median has duplicate values.
+			if (points[store][axis] == points[k][axis])
+				return;
+
+			if (store > k)
+				end = store;
+			else
+				start = store;
+		}
 	}
 }
 
 /**
 	Adds a new point to the kd tree.
 */
-void add(size_t k, T)(ref KDNode!(k, T)* root, in T[k] point, size_t depth = 0) {
+void add(size_t k, T)(ref KDNode!(k, T)* root, in T[k] point, size_t depth = 0) pure nothrow {
 	if (root is null) {
 		root = new KDNode!(k, T)(point);
 		return;
@@ -85,7 +118,7 @@ void add(size_t k, T)(ref KDNode!(k, T)* root, in T[k] point, size_t depth = 0) 
 /**
 	Rebalances the kd tree by creating a new tree with the same elements
 */
-void rebalance(size_t k, T)(ref KDNode!(k, T)* root) {
+void rebalance(size_t k, T)(ref KDNode!(k, T)* root) pure nothrow {
 	root = kdTree(root.elements);
 }
 
@@ -93,9 +126,9 @@ void rebalance(size_t k, T)(ref KDNode!(k, T)* root) {
 	Finds the neares neighbor in the kd tree using euclidean distance metric.
 	root must not be empty.
 */
-const(T[k]) nearest(size_t k, T)(in KDNode!(k, T)* root, in auto ref T[k] point)
+const(T[k]) nearest(size_t k, T)(in KDNode!(k, T)* root, in auto ref T[k] point) pure nothrow @nogc
 in {
-	assert (root !is null, "tree is empty");
+	assert(root !is null, "tree is empty");
 }
 body {
 	const(T[k])* nearest = null;
@@ -196,7 +229,7 @@ unittest {
 	foreach (_; 0 .. 1000) {
 		double[3] point = [uniform01, uniform01, uniform01];
 
-		root.nearest(point).should.equal(points.minElement!(a => a[0 .. $].euclideanDistance(point[0 .. $])));
+		root.nearest(point).should.equal(points.minElement!(a => a[].euclideanDistance(point[])));
 	}
 }
 
@@ -226,7 +259,7 @@ unittest {
 	foreach (_; 0 .. 1000) {
 		double[3] point = [uniform01, uniform01, uniform01];
 
-		root.nearest(point).should.equal(points.minElement!(a => a[0 .. $].euclideanDistance(point[0 .. $])));
+		root.nearest(point).should.equal(points.minElement!(a => a[].euclideanDistance(point[])));
 	}
 }
 
