@@ -1,13 +1,9 @@
 {
-	"name": "kdtree-diddiz",
-	"description": "A k-dimensional tree implementation for D.",
-	"copyright": "Copyright © 2016, Mihail K, Robin Kupper",
-	"authors": [
-		"Mihail-K",
-		"Robin Kupper"
-	],
+	"name": "cdt-kdtree",
+	"description": "k-dimensional trees, made for use in CDT.",
+	"authors": ["Mihail-K", "Robin Kupper", "Aya Partridge"],
 	"license": "MIT",
-	"dependencies": {
-		"fluent-asserts": "~>0.7"
-	}
+	
+	"targetType": "staticLibrary",
+	"targetPath": "lib",
 }
